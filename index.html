@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>篩選項目網頁</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        form {
+            display: inline-block;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+
+        button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        details {
+            margin-top: 20px;
+        }
+
+        #results {
+            margin-top: 20px;
+        }
+
+        .delete-button {
+            margin-left: 10px;
+            padding: 3px 8px;
+            background-color: #FF0000;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-button:hover {
+            background-color: #cc0000;
+        }
+
+        .edit-button {
+            margin-left: 10px;
+            padding: 3px 8px;
+            background-color: #FFC107;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .edit-button:hover {
+            background-color: #e0a800;
+        }
+
+        .filter-buttons {
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .filter-buttons button {
+            display: inline-block;
+            width: auto;
+            padding: 3px 8px;
+            margin: 2px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .filter-buttons button.active {
+            background-color: #0056b3;
+        }
+
+        #save-message {
+            display: none;
+            margin-top: 10px;
+            color: #28a745;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <h2>輸入資料</h2>
+        <form id="input-form">
+            <label for="name">名稱：</label>
+            <input type="text" id="name" name="name" placeholder="輸入名稱"><br>
+
+            <label for="skill">被動技能：</label>
+            <input type="text" id="skill" name="skill" placeholder="輸入被動技能"><br>
+
+            <label for="drop">掉落物：</label>
+            <input type="text" id="drop" name="drop" placeholder="輸入掉落物"><br>
+
+            <button type="button" id="save-button">保存</button>
+            <button type="button" id="update-button" style="display: none;">更新</button>
+        </form>
+        <div id="save-message">資料已保存！</div>
+    </div>
+    <div class="section">
+        <h2>資料管理</h2>
+        <button type="button" id="export-button">匯出資料</button>
+        <input type="file" id="import-file" style="display: none;">
+        <button type="button" id="import-button">匯入資料</button>
+    </div>
+    <div class="section">
+        <h2>篩選技能</h2>
+        <div id="filter-skill-buttons" class="filter-buttons"></div>
+        <button type="button" id="filter-skill-button">篩選技能</button>
+    </div>
+    <div class="section">
+        <h2>篩選掉落物</h2>
+        <div id="filter-drop-buttons" class="filter-buttons"></div>
+        <button type="button" id="filter-drop-button">篩選掉落物</button>
+    </div>
+    <div class="section">
+        <details>
+            <summary>所有已儲存的資料</summary>
+            <div id="all-items"></div>
+        </details>
+    </div>
+    <div id="results" class="section"></div> <!-- 添加這行來顯示篩選結果 -->
+
+    <script>
+        let items = JSON.parse(localStorage.getItem('items')) || [];
+        let currentIndex = null;
+
+        // 保存資料
+        document.getElementById("save-button").addEventListener("click", function () {
+            const name = document.getElementById("name").value;
+            const skill = document.getElementById("skill").value;
+            const drop = document.getElementById("drop").value;
+
+            items.push({ name, skill, drop });
+            localStorage.setItem('items', JSON.stringify(items));
+            showSaveMessage("資料已保存！");
+            displayAllItems();
+            displayFilterButtons();
+            clearForm();
+        });
+
+        // 更新資料
+        document.getElementById("update-button").addEventListener("click", function () {
+            const name = document.getElementById("name").value;
+            const skill = document.getElementById("skill").value;
+            const drop = document.getElementById("drop").value;
+
+            items[currentIndex] = { name, skill, drop };
+            localStorage.setItem('items', JSON.stringify(items));
+            showSaveMessage("資料已更新！");
+            displayAllItems();
+            displayFilterButtons();
+            clearForm();
+            document.getElementById("save-button").style.display = "inline-block";
+            document.getElementById("update-button").style.display = "none";
+        });
+
+        // 顯示保存成功訊息
+        function showSaveMessage(message) {
+            const saveMessage = document.getElementById("save-message");
+            saveMessage.textContent = message;
+            saveMessage.style.display = "block";
+            setTimeout(() => {
+                saveMessage.style.display = "none";
+            }, 2000);
+        }
+
+        // 清空表單
+        function clearForm() {
+            document.getElementById("name").value = "";
+            document.getElementById("skill").value = "";
+            document.getElementById("drop").value = "";
+            currentIndex = null;
+        }
+
+        // 顯示所有已儲存資料
+        function displayAllItems() {
+            const allItemsDiv = document.getElementById("all-items");
+            allItemsDiv.innerHTML = `<table>
+                <thead>
+                    <tr>
+                        <th>名稱</th>
+                        <th>被動技能</th>
+                        <th>掉落物</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${items.map((item, index) => `
+                        <tr>
+                            <td>${item.name}</td>
+                            <td>${item.skill}</td>
+                            <td>${item.drop}</td>
+                            <td>
+                                <button class="edit-button" onclick="editItem(${index})">編輯</button>
+                                <button class="delete-button" onclick="deleteItem(${index})">刪除</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+        }
+
+
+
+        // 刪除資料
+        function deleteItem(index) {
+            items.splice(index, 1);
+            localStorage.setItem('items', JSON.stringify(items));
+            displayAllItems();
+            displayFilterButtons();
+        }
+
+        // 編輯資料
+        function editItem(index) {
+            const item = items[index];
+            document.getElementById("name").value = item.name;
+            document.getElementById("skill").value = item.skill;
+            document.getElementById("drop").value = item.drop;
+            currentIndex = index;
+            document.getElementById("save-button").style.display = "none";
+            document.getElementById("update-button").style.display = "inline-block";
+        }
+        // 匯出資料
+        document.getElementById("export-button").addEventListener("click", function () {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "items.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        });
+
+        // 匯入資料
+        document.getElementById("import-button").addEventListener("click", function () {
+            document.getElementById("import-file").click();
+        });
+
+        document.getElementById("import-file").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const contents = e.target.result;
+                    try {
+                        const importedItems = JSON.parse(contents);
+                        if (Array.isArray(importedItems)) {
+                            items = importedItems;
+                            localStorage.setItem('items', JSON.stringify(items));
+                            showSaveMessage("資料已匯入！");
+                            displayAllItems();
+                            displayFilterButtons();
+                        } else {
+                            alert("匯入的檔案格式不正確");
+                        }
+                    } catch (error) {
+                        alert("匯入資料時發生錯誤：" + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // 顯示篩選按鈕
+        function displayFilterButtons() {
+            const filterSkillButtonsDiv = document.getElementById("filter-skill-buttons");
+            const filterDropButtonsDiv = document.getElementById("filter-drop-buttons");
+            filterSkillButtonsDiv.innerHTML = "";
+            filterDropButtonsDiv.innerHTML = "";
+
+            const skills = new Set();
+            const drops = new Set();
+
+            items.forEach(item => {
+                item.skill.split('.').forEach(skill => skills.add(skill.trim()));
+                item.drop.split('.').forEach(drop => drops.add(drop.trim()));
+            });
+
+            skills.forEach(skill => {
+                filterSkillButtonsDiv.innerHTML += `<button type="button" class="filter-skill-button">${skill}</button>`;
+            });
+
+            drops.forEach(drop => {
+                filterDropButtonsDiv.innerHTML += `<button type="button" class="filter-drop-button">${drop}</button>`;
+            });
+        }
+
+        // 篩選技能資料
+        document.getElementById("filter-skill-button").addEventListener("click", function () {
+            const selectedSkills = Array.from(document.querySelectorAll('.filter-skill-button.active')).map(btn => btn.textContent.toLowerCase());
+
+            const filteredItems = items.filter(item => {
+                const itemSkills = item.skill.toLowerCase().split('.').map(skill => skill.trim());
+                return selectedSkills.every(skill => itemSkills.includes(skill));
+            });
+
+            displayResults(filteredItems);
+        });
+
+        // 篩選掉落物資料
+        document.getElementById("filter-drop-button").addEventListener("click", function () {
+            const selectedDrops = Array.from(document.querySelectorAll('.filter-drop-button.active')).map(btn => btn.textContent.toLowerCase());
+
+            const filteredItems = items.filter(item => {
+                const itemDrops = item.drop.toLowerCase().split('.').map(drop => drop.trim());
+                return selectedDrops.every(drop => itemDrops.includes(drop));
+            });
+
+            displayResults(filteredItems);
+        });
+
+        // 顯示篩選結果
+        function displayResults(filteredItems) {
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = `<table>
+        <thead>
+            <tr>
+                <th>名稱</th>
+                <th>被動技能</th>
+                <th>掉落物</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${filteredItems.map(item => `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.skill}</td>
+                    <td>${item.drop}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>`;
+
+            if (filteredItems.length === 0) {
+                resultsDiv.innerHTML += "<p>沒有符合條件的項目。</p>";
+            }
+        }
+
+        // 啟用/停用篩選按鈕
+        document.getElementById("filter-skill-buttons").addEventListener("click", function (event) {
+            if (event.target.classList.contains('filter-skill-button')) {
+                event.target.classList.toggle('active');
+            }
+        });
+
+        document.getElementById("filter-drop-buttons").addEventListener("click", function (event) {
+            if (event.target.classList.contains('filter-drop-button')) {
+                event.target.classList.toggle('active');
+            }
+        });
+
+        // 頁面加載時顯示已保存的資料和篩選按鈕
+        document.addEventListener("DOMContentLoaded", function () {
+            displayAllItems();
+            displayFilterButtons();
+        });
+    </script>
+</body>
+
+</html>
