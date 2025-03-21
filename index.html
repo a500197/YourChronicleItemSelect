@@ -337,14 +337,11 @@
             });
         }
 
-
-
-
         // 顯示篩選結果
         function displayResults(filteredItems) {
             const resultsDiv = document.getElementById("results");
             // 如果沒有篩選條件被選中，清空結果區域並顯示提示
-            console.log("Filtered Items:", filteredItems);
+            // console.log("Filtered Items:", filteredItems);
             if (filteredItems.length === 0) {
                 resultsDiv.innerHTML = "<p>請選擇篩選條件以顯示結果。</p>";
                 return;
@@ -367,8 +364,6 @@
             `).join('')}
         </tbody>
     </table>`;
-
-
         }
 
         // 啟用/停用篩選按鈕
