@@ -162,7 +162,7 @@
         <div id="filter-drop-buttons" class="filter-buttons"></div>
     </div>
 
-        <button type="button" id="clear-filters-button">清除所有篩選</button>
+    <button type="button" id="clear-filters-button">清除所有篩選</button>
 
     <div class="section">
         <details>
@@ -378,6 +378,7 @@
             const filteredItems = filterItemsBySelection(items, selectedSkills, 'skill'); // 調用通用篩選函式
             displayResults(filteredItems); // 顯示篩選結果
 
+            clearButtonsSelection('.filter-drop-button');// 清除掉落物篩選按鈕的選中狀態
         });
 
         document.getElementById("filter-drop-buttons").addEventListener("click", function (event) {
@@ -389,6 +390,8 @@
 
             const filteredItems = filterItemsBySelection(items, selectedDrops, 'drop'); // 調用通用篩選函式
             displayResults(filteredItems); // 顯示篩選結果
+
+            clearButtonsSelection('.filter-skill-button'); // 清除技能篩選按鈕的選中狀態
         });
 
         // 通用篩選函式
@@ -399,19 +402,18 @@
             });
         }
         document.getElementById("clear-filters-button").addEventListener("click", function () {
-            // 清除技能篩選按鈕的選中狀態
-            const skillButtons = document.querySelectorAll('.filter-skill-button.active');
-            skillButtons.forEach(button => button.classList.remove('active'));
-
-            // 清除掉落物篩選按鈕的選中狀態
-            const dropButtons = document.querySelectorAll('.filter-drop-button.active');
-            dropButtons.forEach(button => button.classList.remove('active'));
-
+            clearButtonsSelection('.filter-skill-button');// 清除技能篩選按鈕的選中狀態
+            clearButtonsSelection('.filter-drop-button');// 清除掉落物篩選按鈕的選中狀態
             // 清空結果區域
             const resultsDiv = document.getElementById("results");
             resultsDiv.innerHTML = "<p>已清除所有篩選條件，請選擇新的篩選條件。</p>";
         });
 
+        // 清除傳入類型之篩選按鈕的選中狀態
+        function clearButtonsSelection(buttonClass) {
+            const buttons = document.querySelectorAll(`${buttonClass}.active`);
+            buttons.forEach(button => button.classList.remove('active'));
+        }
 
         // 頁面加載時顯示已保存的資料和篩選按鈕
         document.addEventListener("DOMContentLoaded", function () {
