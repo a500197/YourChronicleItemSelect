@@ -343,6 +343,12 @@
         // 顯示篩選結果
         function displayResults(filteredItems) {
             const resultsDiv = document.getElementById("results");
+            // 如果沒有篩選條件被選中，清空結果區域並顯示提示
+            console.log("Filtered Items:", filteredItems);
+            if (filteredItems.length === 0) {
+                resultsDiv.innerHTML = "<p>請選擇篩選條件以顯示結果。</p>";
+                return;
+            }
             resultsDiv.innerHTML = `<table>
         <thead>
             <tr>
@@ -362,9 +368,7 @@
         </tbody>
     </table>`;
 
-            if (filteredItems.length === 0) {
-                resultsDiv.innerHTML += "<p>沒有符合條件的項目。</p>";
-            }
+
         }
 
         // 啟用/停用篩選按鈕
@@ -374,7 +378,11 @@
             }
             const selectedSkills = Array.from(document.querySelectorAll('.filter-skill-button.active'))
                 .map(btn => btn.textContent.toLowerCase()); // 收集所有選中的技能
-
+            if (selectedSkills.length == 0) {
+                const resultsDiv = document.getElementById("results");
+                resultsDiv.innerHTML = "<p>請選擇篩選條件以顯示結果。</p>";
+                return;
+            }
             const filteredItems = filterItemsBySelection(items, selectedSkills, 'skill'); // 調用通用篩選函式
             displayResults(filteredItems); // 顯示篩選結果
 
@@ -387,7 +395,11 @@
             }
             const selectedDrops = Array.from(document.querySelectorAll('.filter-drop-button.active'))
                 .map(btn => btn.textContent.toLowerCase()); // 收集所有選中的掉落物
-
+            if (selectedDrops.length == 0) {
+                const resultsDiv = document.getElementById("results");
+                resultsDiv.innerHTML = "<p>請選擇篩選條件以顯示結果。</p>";
+                return;
+            }
             const filteredItems = filterItemsBySelection(items, selectedDrops, 'drop'); // 調用通用篩選函式
             displayResults(filteredItems); // 顯示篩選結果
 
