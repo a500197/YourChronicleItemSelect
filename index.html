@@ -156,13 +156,14 @@
     <div class="section">
         <h2>篩選技能</h2>
         <div id="filter-skill-buttons" class="filter-buttons"></div>
-        <button type="button" id="filter-skill-button">篩選技能</button>
     </div>
     <div class="section">
         <h2>篩選掉落物</h2>
         <div id="filter-drop-buttons" class="filter-buttons"></div>
-        <button type="button" id="filter-drop-button">篩選掉落物</button>
     </div>
+
+        <button type="button" id="clear-filters-button">清除所有篩選</button>
+
     <div class="section">
         <details>
             <summary>所有已儲存的資料</summary>
@@ -312,7 +313,7 @@
             }
         });
 
-        // 顯示篩選按鈕
+        // 收集並創建可用篩選按鈕
         function displayFilterButtons() {
             const filterSkillButtonsDiv = document.getElementById("filter-skill-buttons");
             const filterDropButtonsDiv = document.getElementById("filter-drop-buttons");
@@ -336,29 +337,8 @@
             });
         }
 
-        // 篩選技能資料
-        document.getElementById("filter-skill-button").addEventListener("click", function () {
-            const selectedSkills = Array.from(document.querySelectorAll('.filter-skill-button.active')).map(btn => btn.textContent.toLowerCase());
 
-            const filteredItems = items.filter(item => {
-                const itemSkills = item.skill.toLowerCase().split('.').map(skill => skill.trim());
-                return selectedSkills.every(skill => itemSkills.includes(skill));
-            });
 
-            displayResults(filteredItems);
-        });
-
-        // 篩選掉落物資料
-        document.getElementById("filter-drop-button").addEventListener("click", function () {
-            const selectedDrops = Array.from(document.querySelectorAll('.filter-drop-button.active')).map(btn => btn.textContent.toLowerCase());
-
-            const filteredItems = items.filter(item => {
-                const itemDrops = item.drop.toLowerCase().split('.').map(drop => drop.trim());
-                return selectedDrops.every(drop => itemDrops.includes(drop));
-            });
-
-            displayResults(filteredItems);
-        });
 
         // 顯示篩選結果
         function displayResults(filteredItems) {
@@ -392,13 +372,46 @@
             if (event.target.classList.contains('filter-skill-button')) {
                 event.target.classList.toggle('active');
             }
+            const selectedSkills = Array.from(document.querySelectorAll('.filter-skill-button.active'))
+                .map(btn => btn.textContent.toLowerCase()); // 收集所有選中的技能
+
+            const filteredItems = filterItemsBySelection(items, selectedSkills, 'skill'); // 調用通用篩選函式
+            displayResults(filteredItems); // 顯示篩選結果
+
         });
 
         document.getElementById("filter-drop-buttons").addEventListener("click", function (event) {
             if (event.target.classList.contains('filter-drop-button')) {
                 event.target.classList.toggle('active');
             }
+            const selectedDrops = Array.from(document.querySelectorAll('.filter-drop-button.active'))
+                .map(btn => btn.textContent.toLowerCase()); // 收集所有選中的掉落物
+
+            const filteredItems = filterItemsBySelection(items, selectedDrops, 'drop'); // 調用通用篩選函式
+            displayResults(filteredItems); // 顯示篩選結果
         });
+
+        // 通用篩選函式
+        function filterItemsBySelection(items, selectedValues, type) {
+            return items.filter(item => {
+                const values = item[type].toLowerCase().split('.').map(value => value.trim());
+                return selectedValues.every(value => values.includes(value));
+            });
+        }
+        document.getElementById("clear-filters-button").addEventListener("click", function () {
+            // 清除技能篩選按鈕的選中狀態
+            const skillButtons = document.querySelectorAll('.filter-skill-button.active');
+            skillButtons.forEach(button => button.classList.remove('active'));
+
+            // 清除掉落物篩選按鈕的選中狀態
+            const dropButtons = document.querySelectorAll('.filter-drop-button.active');
+            dropButtons.forEach(button => button.classList.remove('active'));
+
+            // 清空結果區域
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "<p>已清除所有篩選條件，請選擇新的篩選條件。</p>";
+        });
+
 
         // 頁面加載時顯示已保存的資料和篩選按鈕
         document.addEventListener("DOMContentLoaded", function () {
